@@ -28,6 +28,9 @@ type SignedMessage struct {
 }
 
 func VerifyBTCSignature(signedMessage SignedMessage, net *chaincfg.Params, rangedFlag byte) (bool, error) {
+	if rangedFlag > 1 {
+		return false, fmt.Errorf("address mismatched")
+	}
 	// Decode the address
 	address, err := btcutil.DecodeAddress(signedMessage.Address, net)
 	if err != nil {
@@ -108,7 +111,7 @@ func VerifyBTCSignature(signedMessage SignedMessage, net *chaincfg.Params, range
 	case *btcutil.AddressPubKeyHash:
 		ok, err := ValidateP2PKH(recoveryFlag, publicKeyHash, address, net)
 		if err != nil {
-			return VerifyBTCSignature(signedMessage, net, 1)
+			return VerifyBTCSignature(signedMessage, net, rangedFlag+1)
 		}
 
 		return ok, err
@@ -116,7 +119,7 @@ func VerifyBTCSignature(signedMessage SignedMessage, net *chaincfg.Params, range
 	case *btcutil.AddressScriptHash:
 		ok, err := ValidateP2SH(recoveryFlag, publicKeyHash, address, net)
 		if err != nil {
-			return VerifyBTCSignature(signedMessage, net, 1)
+			return VerifyBTCSignature(signedMessage, net, rangedFlag+1)
 		}
 
 		return ok, err
@@ -124,7 +127,7 @@ func VerifyBTCSignature(signedMessage SignedMessage, net *chaincfg.Params, range
 	case *btcutil.AddressWitnessPubKeyHash:
 		ok, err := ValidateP2WPKH(recoveryFlag, publicKeyHash, address, net)
 		if err != nil {
-			return VerifyBTCSignature(signedMessage, net, 1)
+			return VerifyBTCSignature(signedMessage, net, rangedFlag+1)
 		}
 
 		return ok, err
@@ -132,7 +135,7 @@ func VerifyBTCSignature(signedMessage SignedMessage, net *chaincfg.Params, range
 	case *btcutil.AddressTaproot:
 		ok, err := ValidateP2TR(recoveryFlag, publicKey, address, net)
 		if err != nil {
-			return VerifyBTCSignature(signedMessage, net, 1)
+			return VerifyBTCSignature(signedMessage, net, rangedFlag+1)
 		}
 
 		return ok, err

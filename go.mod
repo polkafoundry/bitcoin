@@ -1,4 +1,4 @@
-module github.com/polkafoundry/bitcoin
+module github.com/polkafoundry/bitcoin_utils
 
 go 1.21.0
 

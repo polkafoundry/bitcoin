@@ -41,6 +41,15 @@ const (
 	wallet_okx_taproot_mainnet    = "bc1prx22p25nvvf5sjvuvdzek095eahmnl5mfapxf4vec94nkm3g49hsf0tg9y"
 	okx_taproot_signature_mainnet = "IOIzS2zyKFXyyTP2ZJP5E18bENjlYNHvzbqHHn9muz/6XkuumgcvlyWaSprT7yfNDLPQ6o+IoAEd+wc48iwtGE4="
 
+	wallet_okx_legacy_mainnet    = "12u8y8GbAwZezip25KLpJTPzcuUBTHNbT3"
+	okx_legacy_signature_mainnet = "H/Q3xf1Lr1/gMoSLQQec16+gdT8mg/es7X6rFgC2x30FTkU3LxGHkXHEPzke4i3Lmn8EwIhr6zopacWFkgfgKdU="
+
+	wallet_okx_nativesegwit_mainnet    = "bc1qtqnuww423nacmj0d2705qm6r72hqneavvs2gmx"
+	okx_nativesegwit_signature_mainnet = "IMW7tLuVMPDcRvA86QQZn912WDUTVbEsaFU/QF8uy3xcMaJZk/Xomwvr6BFiOvIB9qqPHjc02eH2xc0mhF0KtKM="
+
+	wallet_okx_nestedsegwit_mainnet    = "3MTbJEyWaNsYVjRzcjUCc34yoxE5CNZKm4"
+	okx_nestedsegwit_signature_mainnet = "H/Or+rgO5LA3UrajQU+lzaoWPhXFyCsepmV4r5gebwKnS3WDb4Vc4XgtHXT/NIejO8gfPQNFEa+dEKCgnNMztPo="
+
 	unisat_nativesegwit_signature_mainnet_fail = "HK0zjJT1BNzVyfuY02aPzVLNf71mlw0DQIkKX+iyCOJkKf5CeH8T07xkj+qggmSqy7HliylMd1GKq+b5xlOzHME=aa"
 
 	unisat_nestedsegwit_signature_mainnet_fail = "G34VIXQLfn0BQpdQRVw8zqLXc0F2BZzEjtkqmwsHIngPE80EKKsYcxPzQ/emI5ejG/FkKCViRKG809tcHUR8fbU=aa"
@@ -65,7 +74,7 @@ type Wallet struct {
 	network   *chaincfg.Params
 }
 
-func TestVerify(t *testing.T) {
+func TestVerifyUnisatWallet(t *testing.T) {
 	wallets := []Wallet{
 		{
 			address:   wallet_unisat_taproot_testnet,
@@ -107,14 +116,48 @@ func TestVerify(t *testing.T) {
 			signature: unisat_legacy_signature_mainnet,
 			network:   &chaincfg.MainNetParams,
 		},
+	}
+
+	for _, test := range wallets {
+		ok, err := VerifyWithChain(SignedMessage{
+			Address:   test.address,
+			Message:   message,
+			Signature: test.signature,
+		}, test.network)
+
+		if err != nil {
+			t.Error(err)
+		}
+
+		require.Equal(t, true, ok)
+	}
+}
+
+func TestVerifyOKXWallet(t *testing.T) {
+	okxWallet := []Wallet{
 		{
 			address:   wallet_okx_taproot_mainnet,
 			signature: okx_taproot_signature_mainnet,
 			network:   &chaincfg.MainNetParams,
 		},
+		{
+			address:   wallet_okx_nativesegwit_mainnet,
+			signature: okx_nativesegwit_signature_mainnet,
+			network:   &chaincfg.MainNetParams,
+		},
+		{
+			address:   wallet_okx_legacy_mainnet,
+			signature: okx_legacy_signature_mainnet,
+			network:   &chaincfg.MainNetParams,
+		},
+		{
+			address:   wallet_okx_nestedsegwit_mainnet,
+			signature: okx_nestedsegwit_signature_mainnet,
+			network:   &chaincfg.MainNetParams,
+		},
 	}
 
-	for _, test := range wallets {
+	for _, test := range okxWallet {
 		ok, err := VerifyWithChain(SignedMessage{
 			Address:   test.address,
 			Message:   message,

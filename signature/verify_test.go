@@ -1,7 +1,10 @@
 package signature
 
 import (
+	"encoding/base64"
+	"fmt"
 	"github.com/btcsuite/btcd/chaincfg"
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"testing"
 )
@@ -31,6 +34,29 @@ const (
 
 	wallet_unisat_nestedsegwit_testnet    = "2NFJFk1FLP8Q5t1EcetKQ3WK291KZEoUPbm"
 	unisat_nestedsegwit_signature_testnet = "G0lDvE3WkasJk33EPH2tFyRCb0I3eEtkHQhqmHGOarG7ODaG5VXQ0Ziclz8naiYbThF20qNJnWgjlzinBuIMZR8="
+
+	wallet_unisat_taproot_mainnet_fail    = "bc1pead7k9rdu4ged9q7qt2hqcxr6sx2jvxp7z86tqa8a9tncct657dq6cn4y71"
+	unisat_taproot_signature_mainnet_fail = "G3loPvTHNcZ8DrPBthoq/VEYoEaH3XXQN4T5gXa5RgG9DHlAn4QFk3oqIjEntXo8CHNoynoH1AF4BMBbXHDWMT4=aa"
+
+	wallet_okx_taproot_mainnet    = "bc1prx22p25nvvf5sjvuvdzek095eahmnl5mfapxf4vec94nkm3g49hsf0tg9y"
+	okx_taproot_signature_mainnet = "IOIzS2zyKFXyyTP2ZJP5E18bENjlYNHvzbqHHn9muz/6XkuumgcvlyWaSprT7yfNDLPQ6o+IoAEd+wc48iwtGE4="
+
+	unisat_nativesegwit_signature_mainnet_fail = "HK0zjJT1BNzVyfuY02aPzVLNf71mlw0DQIkKX+iyCOJkKf5CeH8T07xkj+qggmSqy7HliylMd1GKq+b5xlOzHME=aa"
+
+	unisat_nestedsegwit_signature_mainnet_fail = "G34VIXQLfn0BQpdQRVw8zqLXc0F2BZzEjtkqmwsHIngPE80EKKsYcxPzQ/emI5ejG/FkKCViRKG809tcHUR8fbU=aa"
+
+	unisat_legacy_signature_mainnet_fail = "HC4YrhY0qTsgGlOGRmSzHzwRTUsYIFjkiKRlIffhXV/kUQWAAYG9NDjV441JlwsbqR7WUNrqGGqMcbfTGaa66Z8=aa"
+
+	unisat_taproot_signature_testnet_fail = "HBapBhmp8LcqF+9Nej4nnNvCaLdIQvD1qH27UaNSaq7hCYWsXBRO92mv8tHbv1iPJwkAb+EqXdmDyILd+NxGGf8=aa"
+
+	unisat_nativesegwit_signature_testnet_fail = "G+UOhPKmZOyfIbiZ3Mv7QQ2fHZ0RntihWbZ46//PCvaOYvYze+Dgb4epd49NbN3RWuKayJxGD1o8oq8Kq54Mgl0=aa"
+
+	unisat_legacy_signature_testnet_fail = "G3HjU+tnrcmlwnQ7n7q6tToXgk1gcDa1nfxoFumKpQ03aKe4/ymiI7YHvnonnZNa4hKtfvazYXkq2VVtL/Wky2I=aa"
+
+	unisat_nestedsegwit_signature_testnet_fail = "G0lDvE3WkasJk33EPH2tFyRCb0I3eEtkHQhqmHGOarG7ODaG5VXQ0Ziclz8naiYbThF20qNJnWgjlzinBuIMZR8=aa"
+
+	invalid         = "INVALID"
+	wrong_signature = "IOIzS2zyKFXyyTP2ZJP5E18bENjlYNHvzbqHHn9muz/6XkuumgcvlyWaSprT7yfNDLPQ6o+IoAEd+wc48iwtGE4="
 )
 
 type Wallet struct {
@@ -81,6 +107,11 @@ func TestVerify(t *testing.T) {
 			signature: unisat_legacy_signature_mainnet,
 			network:   &chaincfg.MainNetParams,
 		},
+		{
+			address:   wallet_okx_taproot_mainnet,
+			signature: okx_taproot_signature_mainnet,
+			network:   &chaincfg.MainNetParams,
+		},
 	}
 
 	for _, test := range wallets {
@@ -96,4 +127,166 @@ func TestVerify(t *testing.T) {
 
 		require.Equal(t, true, ok)
 	}
+}
+
+func TestVerifyFailureAddressMismatched(t *testing.T) {
+	wallet := []Wallet{
+		{
+			address:   wallet_unisat_taproot_testnet,
+			signature: unisat_nativesegwit_signature_testnet,
+			network:   &chaincfg.TestNet3Params,
+		},
+		{
+			address:   wallet_unisat_taproot_mainnet,
+			signature: unisat_nativesegwit_signature_mainnet,
+			network:   &chaincfg.MainNetParams,
+		},
+		{
+			address:   wallet_unisat_nativesegwit_testnet,
+			signature: unisat_taproot_signature_testnet,
+			network:   &chaincfg.TestNet3Params,
+		},
+		{
+			address:   wallet_unisat_nativesegwit_mainnet,
+			signature: unisat_taproot_signature_mainnet,
+			network:   &chaincfg.MainNetParams,
+		},
+		{
+			address:   wallet_unisat_nestedsegwit_testnet,
+			signature: unisat_legacy_signature_testnet,
+			network:   &chaincfg.TestNet3Params,
+		},
+		{
+			address:   wallet_unisat_nestedsegwit_mainnet,
+			signature: unisat_legacy_signature_mainnet,
+			network:   &chaincfg.MainNetParams,
+		},
+		{
+			address:   wallet_unisat_legacy_testnet,
+			signature: unisat_nestedsegwit_signature_testnet,
+			network:   &chaincfg.TestNet3Params,
+		},
+		{
+			address:   wallet_unisat_legacy_mainnet,
+			signature: unisat_nestedsegwit_signature_mainnet,
+			network:   &chaincfg.MainNetParams,
+		},
+	}
+	for _, test := range wallet {
+		ok, err := VerifyWithChain(SignedMessage{
+			Address:   test.address,
+			Message:   message,
+			Signature: test.signature,
+		}, test.network)
+
+		require.Equal(t, err, fmt.Errorf("address mismatched"))
+		require.Equal(t, false, ok)
+	}
+}
+
+func TestVerifyWrongSignature(t *testing.T) {
+	wallet := []Wallet{
+		{
+			address:   wallet_unisat_taproot_testnet,
+			signature: unisat_taproot_signature_testnet_fail,
+			network:   &chaincfg.TestNet3Params,
+		},
+		{
+			address:   wallet_unisat_taproot_mainnet,
+			signature: unisat_taproot_signature_mainnet_fail,
+			network:   &chaincfg.MainNetParams,
+		},
+		{
+			address:   wallet_unisat_nativesegwit_testnet,
+			signature: unisat_nativesegwit_signature_testnet_fail,
+			network:   &chaincfg.TestNet3Params,
+		},
+		{
+			address:   wallet_unisat_nativesegwit_mainnet,
+			signature: unisat_nativesegwit_signature_mainnet_fail,
+			network:   &chaincfg.MainNetParams,
+		},
+		{
+			address:   wallet_unisat_nestedsegwit_testnet,
+			signature: unisat_nestedsegwit_signature_testnet_fail,
+			network:   &chaincfg.TestNet3Params,
+		},
+		{
+			address:   wallet_unisat_nestedsegwit_mainnet,
+			signature: unisat_nestedsegwit_signature_mainnet_fail,
+			network:   &chaincfg.MainNetParams,
+		},
+		{
+			address:   wallet_unisat_legacy_testnet,
+			signature: unisat_legacy_signature_testnet_fail,
+			network:   &chaincfg.TestNet3Params,
+		},
+		{
+			address:   wallet_unisat_legacy_mainnet,
+			signature: unisat_legacy_signature_mainnet_fail,
+			network:   &chaincfg.MainNetParams,
+		},
+	}
+
+	for _, test := range wallet {
+		ok, err := VerifyWithChain(SignedMessage{
+			Address:   test.address,
+			Message:   message,
+			Signature: test.signature,
+		}, test.network)
+
+		require.Equal(t, err, base64.CorruptInputError(88))
+		require.Equal(t, false, ok)
+	}
+}
+
+func TestVerifyWrongAddress(t *testing.T) {
+	wallet := Wallet{
+		address:   wallet_unisat_taproot_mainnet_fail,
+		signature: unisat_taproot_signature_mainnet,
+		network:   &chaincfg.MainNetParams,
+	}
+
+	ok, err := VerifyWithChain(SignedMessage{
+		Address:   wallet.address,
+		Message:   message,
+		Signature: wallet.signature,
+	}, wallet.network)
+
+	assert.EqualError(t, err, "could not decode address: checksum mismatch")
+	assert.Equal(t, false, ok)
+}
+
+func TestVerifyInvalidAddress(t *testing.T) {
+	wallet := Wallet{
+		address:   invalid,
+		signature: unisat_taproot_signature_mainnet,
+		network:   &chaincfg.MainNetParams,
+	}
+
+	ok, err := VerifyWithChain(SignedMessage{
+		Address:   wallet.address,
+		Message:   message,
+		Signature: wallet.signature,
+	}, wallet.network)
+
+	assert.EqualError(t, err, "could not decode address: decoded address is of unknown format")
+	assert.Equal(t, false, ok)
+}
+
+func TestVerifyWrongGeneratedSignature(t *testing.T) {
+	wallet := Wallet{
+		address:   wallet_unisat_taproot_mainnet,
+		signature: wrong_signature,
+		network:   &chaincfg.MainNetParams,
+	}
+
+	ok, err := VerifyWithChain(SignedMessage{
+		Address:   wallet.address,
+		Message:   message,
+		Signature: wallet.signature,
+	}, wallet.network)
+
+	assert.EqualError(t, err, "address mismatched")
+	assert.Equal(t, false, ok)
 }
